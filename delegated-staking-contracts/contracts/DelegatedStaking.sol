@@ -5,7 +5,7 @@ import "./interfaces/ForgerStakesV2.sol";
 
 contract DelegatedStaking {
 
-    address public signer;
+    bytes32 public signPublicKey;
     bytes32 public forgerVrf1;
     bytes1 public forgerVrf2;
     ForgerStakesV2 public forger;
@@ -26,8 +26,8 @@ contract DelegatedStaking {
     error PublicKeyNotCorrectForOwner(); 
 
     //constructor
-    constructor(address _signer, bytes32 vrf1, bytes1 vrf2, ForgerStakesV2 _forger) {
-        signer = _signer;
+    constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2, ForgerStakesV2 _forger) {
+        signPublicKey = _signPublicKey;
         forger = _forger;
         forgerVrf1 = vrf1;
         forgerVrf2 = vrf2;
@@ -42,14 +42,12 @@ contract DelegatedStaking {
         emit ReceivedFunds(msg.sender, msg.value);
     }
 
-    function claimReward(address owner, bytes32 signPubKey) external {
-        _checkPublicKey(owner, signPubKey); //check if public key is valid
-
+    function claimReward(address owner) external {
         uint32 startEpoch = lastClaimedEpochForAddress[owner] + 1;
 
         //get sum fees
-        uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPubKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
-        uint256 delegatorStakesAtEpochMinus2 = forger.stakeTotal();
+        uint256[] memory sumFeeAccruedInEpoch = new uint256[](0); //forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
+        uint256 delegatorStakesAtEpochMinus2 = 0; // forger.stakeTotal();
 
         uint32 length = uint32(sumFeeAccruedInEpoch.length);
         ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length);
@@ -57,7 +55,7 @@ contract DelegatedStaking {
         uint32 i; //loop
         while(i != length) {
             uint32 epoch = startEpoch + i;
-            uint256 claimedReward = _claimEpoch(owner, signPubKey, sumFeeAccruedInEpoch[i], startEpoch + i);
+            uint256 claimedReward = _claimEpoch(owner, sumFeeAccruedInEpoch[i], startEpoch + i);
             epochNumbersAndClaimedRewards[i] = ClaimData(epoch, claimedReward);
             unchecked { ++i; }
         }
@@ -65,18 +63,12 @@ contract DelegatedStaking {
         lastClaimedEpochForAddress[owner] = startEpoch + length;
     }
 
-    function _claimEpoch(address owner, bytes32 signPubKey, uint256 feeForEpoch, uint256 epoch) internal returns(uint256) {
+    function _claimEpoch(address owner, uint256 feeForEpoch, uint256 epoch) internal returns(uint256) {
         
         uint256 totalStakesAtEpochMinus2 = 0; //forger.stakeTotal();
         
-        uint256 reward = feeForEpoch * delegatorStakesAtEpochMinus2 / totalStakesAtEpochMinus2;
+        uint256 reward = 0; //feeForEpoch * delegatorStakesAtEpochMinus2 / totalStakesAtEpochMinus2;
         payable(owner).transfer(reward);
         return reward;        
-    }
-
-    function _checkPublicKey(address owner, bytes32 pubkey) internal pure {
-        if (address(bytes20(keccak256(abi.encodePacked(pubkey)))) != owner) {
-            revert PublicKeyNotCorrectForOwner();
-        }
     }
 }
