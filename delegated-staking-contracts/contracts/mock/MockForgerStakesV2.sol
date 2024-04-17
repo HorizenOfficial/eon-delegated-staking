@@ -16,18 +16,20 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     function updateForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint32 rewardShare, address reward_address, bytes32 signature1, bytes32 signature2) external {}
     function delegate(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2) external payable {}
     function withdraw(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint256 amount) external {}
-    function getForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2) external view returns (ForgerInfo memory forgerInfo) {
+    function getForger(bytes32, bytes32, bytes1) external pure returns (ForgerInfo memory forgerInfo) {
         forgerInfo = ForgerInfo("", "", "", 0, address(0));
     }
-    function getPagedForgers(int32 startIndex, int32 pageSize) external view returns (int32 nextIndex, ForgerInfo[] memory listOfForgerInfo) {
+    function getPagedForgers(int32, int32) external pure returns (int32 nextIndex, ForgerInfo[] memory listOfForgerInfo) {
+        nextIndex = -1;
         listOfForgerInfo = new ForgerInfo[](0);
+        return (nextIndex, listOfForgerInfo);
     }
-    function getPagedForgersStakesByForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, int32 startIndex, int32 pageSize) external view returns (int32 nextIndex, StakeDataDelegator[] memory listOfDelegatorStakes) {
+    function getPagedForgersStakesByForger(bytes32, bytes32, bytes1, int32, int32) external pure returns (int32 nextIndex, StakeDataDelegator[] memory listOfDelegatorStakes) {
         nextIndex = -1;
         listOfDelegatorStakes = new StakeDataDelegator[](0);
         return (nextIndex, listOfDelegatorStakes);
     }
-    function getPagedForgersStakesByDelegator(address delegator, int32 startIndex, int32 pageSize) external view returns (int32 nextIndex, StakeDataForger[] memory listOfForgerStakes) {
+    function getPagedForgersStakesByDelegator(address, int32, int32) external pure returns (int32 nextIndex, StakeDataForger[] memory listOfForgerStakes)  {
         nextIndex = -1;
         listOfForgerStakes = new StakeDataForger[](0);
         return (nextIndex, listOfForgerStakes);
@@ -44,7 +46,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     }
 
     //read methods
-    function stakeTotal(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, address delegator, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfStakes) {
+    function stakeTotal(bytes32, bytes32, bytes1, address delegator, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfStakes) {
         uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart;
         listOfStakes = new uint256[](length);
         
@@ -54,7 +56,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
         }
     }
 
-    function rewardsReceived(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfRewards) {
+    function rewardsReceived(bytes32, bytes32, bytes1, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfRewards) {
         uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart;
         listOfRewards = new uint256[](length);
 
