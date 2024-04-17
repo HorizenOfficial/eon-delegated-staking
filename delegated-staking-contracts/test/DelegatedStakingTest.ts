@@ -60,21 +60,21 @@ describe("DelegatedStaking", function () {
       (await mockedForger.mockCurrentEpoch(rewardsEpochs.length)).wait();
 
       //get current delegator balance
-      let preClaimBalance = await hre.ethers.getDefaultProvider().getBalance(await delegator.getAddress());
-      let preClaimContractBalance = await hre.ethers.getDefaultProvider().getBalance(await delegatedStaking.getAddress());
+      let preClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
+      let preClaimContractBalance = await hre.ethers.provider.getBalance(await delegatedStaking.getAddress());
 
       let tx = await delegatedStaking.claimReward(await delegator.getAddress());
       await tx.wait();
       let lastClaimedEpoch = await delegatedStaking.lastClaimedEpochForAddress(await delegator.getAddress());
       
       //get balance after claim
-      let postClaimBalance = await hre.ethers.getDefaultProvider().getBalance(await delegator.getAddress());
-      let postClaimContractBalance = await hre.ethers.getDefaultProvider().getBalance(await delegatedStaking.getAddress());
+      let postClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
+      let postClaimContractBalance = await hre.ethers.provider.getBalance(await delegatedStaking.getAddress());
 
       expect(lastClaimedEpoch).to.equal(rewardsEpochs.length);
       expect(postClaimBalance).to.equal(preClaimBalance + BigInt(correctRewardForDelegator));
       expect(postClaimContractBalance).to.equal(preClaimContractBalance - BigInt(correctRewardForDelegator));
-
+      
     });
   });
 });
