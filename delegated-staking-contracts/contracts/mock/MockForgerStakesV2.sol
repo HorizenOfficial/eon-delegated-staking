@@ -8,6 +8,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     uint32 currentEpoch;
     mapping(uint32 => uint256) rewardsForEpoch;
     mapping(address => mapping(uint32 => uint256)) stakeForAddressAndEpoch;
+    mapping(uint32 => uint256) totalStakeForEpoch;
 
 
     //Methods not useful for this test
@@ -44,25 +45,33 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     function mockRewardForEpoch(uint32 epoch, uint256 reward) external {
         rewardsForEpoch[epoch] = reward;
     }
+    function mockStakeForEpoch(uint32 epoch, address delegator, uint256 value) external {
+        stakeForAddressAndEpoch[delegator][epoch] = value;
+        totalStakeForEpoch[epoch] += value;
+    }
 
     //read methods
     function stakeTotal(bytes32, bytes32, bytes1, address delegator, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfStakes) {
-        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart;
+        
+        mapping(uint32 => uint256) storage source = delegator == address(0) ? totalStakeForEpoch : stakeForAddressAndEpoch[delegator];
+        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart + 1;
         listOfStakes = new uint256[](length);
         
         uint32 i;
         while(i < length) {
-            listOfStakes[i] = stakeForAddressAndEpoch[delegator][consensusEpochStart+i];
+            listOfStakes[i] = source[consensusEpochStart+i];
+            unchecked { ++i; }
         }
     }
 
     function rewardsReceived(bytes32, bytes32, bytes1, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfRewards) {
-        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart;
+        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart + 1;
         listOfRewards = new uint256[](length);
 
         uint32 i;
         while(i < length) {
             listOfRewards[i] = rewardsForEpoch[consensusEpochStart+i];
+            unchecked { ++i; }
         }
     }
 

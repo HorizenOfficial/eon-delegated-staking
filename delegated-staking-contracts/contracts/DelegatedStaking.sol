@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./interfaces/ForgerStakesV2.sol";
+import "hardhat/console.sol";
 
 contract DelegatedStaking {
 
@@ -61,12 +62,13 @@ contract DelegatedStaking {
         uint32 epoch = startEpoch;
         while(i != length) {
             uint256 claimedReward = sumFeeAccruedInEpoch[i] * delegatorStakes[i] / totalStakes[i];
+            
             owner.transfer(claimedReward);
 
             epochNumbersAndClaimedRewards[i] = ClaimData(epoch, claimedReward);
             unchecked { ++i; ++epoch; }
         }
 
-        lastClaimedEpochForAddress[owner] = epoch;
+        lastClaimedEpochForAddress[owner] = epoch - 1;
     }
 }
