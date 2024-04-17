@@ -19,7 +19,6 @@ describe("DelegatedStaking", function () {
 
   describe("DelegatedStaking Test", function () {
 
-
     before(async () => {
       accounts = await hre.ethers.getSigners();
       delegator = accounts[0];
@@ -39,13 +38,7 @@ describe("DelegatedStaking", function () {
       await fundTx.wait();
     });
 
-    it("Test simple delegate claim", async function () {
-      // GAS PRICE SHOULD BE ZERO IN HARDHAT CONFIG
-
-      let rewardsEpochs = [100, 100]; //1 epoch for each item in the array
-      let delegatorStakes = [30, 90];
-      let otherStakes = [70, 10];
-
+    async function applyEpochsRewards(rewardsEpochs: number[], delegatorStakes: number[], otherStakes: number[]): Promise<number> {
       let correctRewardForDelegator: number = 0;
       for(let i=0; i < rewardsEpochs.length; i++) {
         //write data on contract
@@ -58,6 +51,17 @@ describe("DelegatedStaking", function () {
         correctRewardForDelegator += rewardsEpochs[i] * delegatorStakes[i] / (delegatorStakes[i] + otherStakes[i]);
       }
       (await mockedForger.mockCurrentEpoch(rewardsEpochs.length)).wait();
+      return correctRewardForDelegator;
+    }
+
+    it("Test simple delegate claim", async function () {
+      // GAS PRICE SHOULD BE ZERO IN HARDHAT CONFIG
+
+      let rewardsEpochs = [100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90];
+      let otherStakes = [70, 10];
+
+      let correctRewardForDelegator = await applyEpochsRewards(rewardsEpochs, delegatorStakes, otherStakes);
 
       //get current delegator balance
       let preClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
@@ -74,7 +78,7 @@ describe("DelegatedStaking", function () {
       expect(lastClaimedEpoch).to.equal(rewardsEpochs.length);
       expect(postClaimBalance).to.equal(preClaimBalance + BigInt(correctRewardForDelegator));
       expect(postClaimContractBalance).to.equal(preClaimContractBalance - BigInt(correctRewardForDelegator));
-      
+
     });
   });
 });
