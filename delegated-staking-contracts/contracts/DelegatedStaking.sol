@@ -10,6 +10,8 @@ contract DelegatedStaking {
     bytes32 public forgerVrf1;
     bytes1 public forgerVrf2;
     ForgerStakesV2 public forger;
+    uint32 epochAtDeploy;
+
     mapping(address => uint32) public lastClaimedEpochForAddress;
     uint32 public constant  MAX_NUMBER_OF_EPOCH = 100;
 
@@ -32,6 +34,8 @@ contract DelegatedStaking {
         forger = _forger;
         forgerVrf1 = vrf1;
         forgerVrf2 = vrf2;
+
+        epochAtDeploy = forger.getCurrentConsensusEpoch();
     }
 
     //fallbacks so it can receive ethers
@@ -44,26 +48,49 @@ contract DelegatedStaking {
     }
 
     function claimReward(address payable owner) external {
-        uint32 startEpoch = lastClaimedEpochForAddress[owner] + 1; //TODO first time it will start from 0. Is this correct?
+        uint32 lastClaimedEpoch = lastClaimedEpochForAddress[owner];
+        uint32 startEpoch;
+        if(lastClaimedEpoch == 0) {
+            startEpoch = epochAtDeploy; //start from the epoch when this contract has deployed
+        } 
+        else { 
+            startEpoch = lastClaimedEpoch + 1; //start from the next to claim
+        }
 
         //uint32 lastEpoch = forger.getCurrentConsensusEpoch(); //TODO is this useful since we use max number of epoch?
 
         //get sum fees
         uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
-        uint256[] memory delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch, MAX_NUMBER_OF_EPOCH); 
-        //TODO stakeDetail method does not exist, using stakeTotal with delegator
-        uint256[] memory totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch, MAX_NUMBER_OF_EPOCH); 
-        //TODO using address(0) instead of null since null does not exist, is this correct?
-
         uint32 length = uint32(sumFeeAccruedInEpoch.length);
+
+        uint256[] memory delegatorStakes;
+        uint256[] memory totalStakes;
+    
+        if(startEpoch >= 2) { //avoid negative with this check
+            delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
+            totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
+        } else {
+            delegatorStakes = new uint256[](length); //array of 0s
+            totalStakes = new uint256[](length); //array of 0s
+        }
+
         ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length);
 
         uint32 i; //loop
         uint32 epoch = startEpoch;
         while(i != length) {
-            uint256 claimedReward = sumFeeAccruedInEpoch[i] * delegatorStakes[i] / totalStakes[i];
-            
-            owner.transfer(claimedReward);
+            uint256 claimedReward;
+
+            if(totalStakes[i] == 0) {
+                claimedReward = 0; //avoid divison by 0
+            }
+            else {
+                claimedReward = sumFeeAccruedInEpoch[i] * delegatorStakes[i] / totalStakes[i];
+            }
+
+            if(claimedReward > 0) {
+                owner.transfer(claimedReward);
+            }
 
             epochNumbersAndClaimedRewards[i] = ClaimData(epoch, claimedReward);
             unchecked { ++i; ++epoch; }

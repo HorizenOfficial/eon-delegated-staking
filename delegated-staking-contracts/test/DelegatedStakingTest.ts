@@ -48,8 +48,10 @@ describe("DelegatedStaking", function () {
         await (await mockedForger.mockStakeForEpoch(i+1, await other.getAddress(), otherStakes[i])).wait();
 
         //add to correct reward calculated
+        if(delegatorStakes[i] + otherStakes[i] == 0) continue; //avoid division by 0
         correctRewardForDelegator += rewardsEpochs[i] * delegatorStakes[i] / (delegatorStakes[i] + otherStakes[i]);
       }
+      
       (await mockedForger.mockCurrentEpoch(rewardsEpochs.length)).wait();
       return correctRewardForDelegator;
     }
@@ -57,9 +59,9 @@ describe("DelegatedStaking", function () {
     it("Test simple delegate claim", async function () {
       // GAS PRICE SHOULD BE ZERO IN HARDHAT CONFIG
 
-      let rewardsEpochs = [100, 100]; //1 epoch for each item in the array
-      let delegatorStakes = [30, 90];
-      let otherStakes = [70, 10];
+      let rewardsEpochs = [0, 0, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 0, 0];
 
       let correctRewardForDelegator = await applyEpochsRewards(rewardsEpochs, delegatorStakes, otherStakes);
 
