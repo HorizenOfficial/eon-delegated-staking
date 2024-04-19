@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import "./interfaces/ForgerStakesV2.sol";
-import "hardhat/console.sol";
 
 contract DelegatedStaking {
 
@@ -48,31 +47,15 @@ contract DelegatedStaking {
     }
 
     function claimReward(address payable owner) external {
-        uint32 lastClaimedEpoch = lastClaimedEpochForAddress[owner];
-        uint32 startEpoch;
-        if(lastClaimedEpoch == 0) {
-            startEpoch = epochAtDeploy; //start from the epoch when this contract has deployed
-        } 
-        else { 
-            startEpoch = lastClaimedEpoch + 1; //start from the next to claim
-        }
-
+        uint32 startEpoch = _getStartEpochForAddress(owner);
         //uint32 lastEpoch = forger.getCurrentConsensusEpoch(); //TODO is this useful since we use max number of epoch?
 
         //get sum fees
         uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
         uint32 length = uint32(sumFeeAccruedInEpoch.length);
-
-        uint256[] memory delegatorStakes;
-        uint256[] memory totalStakes;
     
-        if(startEpoch >= 2) { //avoid negative with this check
-            delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
-            totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
-        } else {
-            delegatorStakes = new uint256[](length); //array of 0s
-            totalStakes = new uint256[](length); //array of 0s
-        }
+        uint256[] memory delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
+        uint256[] memory totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
 
         ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length);
 
@@ -97,5 +80,18 @@ contract DelegatedStaking {
         }
 
         lastClaimedEpochForAddress[owner] = epoch - 1;
+    }
+
+    function _getStartEpochForAddress(address owner) internal view returns(uint32) {
+        uint32 lastClaimedEpoch = lastClaimedEpochForAddress[owner];
+        uint32 startEpoch;
+        if(lastClaimedEpoch == 0) {
+            startEpoch = epochAtDeploy; //start from the epoch when this contract has deployed
+        } 
+        else { 
+            startEpoch = lastClaimedEpoch + 1; //start from the next to claim
+        }
+
+        return startEpoch < 2 ? 2 : startEpoch; //nothing to claim in first two epochs due to n-2
     }
 }

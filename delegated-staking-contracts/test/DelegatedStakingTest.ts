@@ -38,22 +38,16 @@ describe("DelegatedStaking", function () {
       await fundTx.wait();
     });
 
-    async function applyEpochsRewards(rewardsEpochs: number[], delegatorStakes: number[], otherStakes: number[]): Promise<number> {
-      let correctRewardForDelegator: number = 0;
+    async function mockEpoch(startEpoch: number, rewardsEpochs: number[], delegatorStakes: number[], otherStakes: number[]) {
       for(let i=0; i < rewardsEpochs.length; i++) {
         //write data on contract
-        await (await mockedForger.mockRewardForEpoch(i+1, rewardsEpochs[i])).wait();
+        await (await mockedForger.mockRewardForEpoch(startEpoch+i, rewardsEpochs[i])).wait();
         
-        await (await mockedForger.mockStakeForEpoch(i+1, await delegator.getAddress(), delegatorStakes[i])).wait();
-        await (await mockedForger.mockStakeForEpoch(i+1, await other.getAddress(), otherStakes[i])).wait();
-
-        //add to correct reward calculated
-        if(delegatorStakes[i] + otherStakes[i] == 0) continue; //avoid division by 0
-        correctRewardForDelegator += rewardsEpochs[i] * delegatorStakes[i] / (delegatorStakes[i] + otherStakes[i]);
+        await (await mockedForger.mockStakeForEpoch(startEpoch+i, await delegator.getAddress(), delegatorStakes[i])).wait();
+        await (await mockedForger.mockStakeForEpoch(startEpoch+i, await other.getAddress(), otherStakes[i])).wait();
       }
-      
-      (await mockedForger.mockCurrentEpoch(rewardsEpochs.length)).wait();
-      return correctRewardForDelegator;
+
+      (await mockedForger.mockCurrentEpoch(startEpoch + rewardsEpochs.length)).wait();
     }
 
     it("Test simple delegate claim", async function () {
@@ -63,7 +57,9 @@ describe("DelegatedStaking", function () {
       let delegatorStakes = [30, 90, 0, 0]; //rewards are calculated using n-2 stakes
       let otherStakes = [70, 10, 0, 0];
 
-      let correctRewardForDelegator = await applyEpochsRewards(rewardsEpochs, delegatorStakes, otherStakes);
+      let correctRewardForDelegator = 120; //30 on epoch 3, 90 on on epoch 4
+
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
 
       //get current delegator balance
       let preClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
@@ -84,3 +80,4 @@ describe("DelegatedStaking", function () {
     });
   });
 });
+
