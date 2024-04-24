@@ -11,7 +11,7 @@ contract DelegatedStaking {
     ForgerStakesV2 public forger;
 
     mapping(address => uint32) public lastClaimedEpochForAddress;
-    uint32 public constant  MAX_NUMBER_OF_EPOCH = 100;
+    uint32 public constant MAX_NUMBER_OF_EPOCH = 100;
 
     struct ClaimData {
         uint32 epochNumber;
@@ -45,6 +45,12 @@ contract DelegatedStaking {
 
     function claimReward(address payable owner) external {
         uint32 startEpoch = _getStartEpochForAddress(owner);
+        if(startEpoch >= forger.getCurrentConsensusEpoch()) {
+            //nothing to claim 
+            //we are et epoch N, delegator already claimed until N-1 OR
+            //we are at an epoch that is lower than 2 (2 is minimum for startEpoch)
+            return;
+        }
         //uint32 lastEpoch = forger.getCurrentConsensusEpoch(); //TODO is this useful since we use max number of epoch?
 
         //get sum fees
@@ -77,6 +83,8 @@ contract DelegatedStaking {
         }
 
         lastClaimedEpochForAddress[owner] = epoch - 1;
+        emit Claim(owner, forgerVrf1, forgerVrf2, epochNumbersAndClaimedRewards);
+
     }
 
     function _getStartEpochForAddress(address owner) internal view returns(uint32) {

@@ -53,11 +53,11 @@ describe("DelegatedStaking", function () {
     it("Test simple delegate claim", async function () {
       // GAS PRICE SHOULD BE ZERO IN HARDHAT CONFIG
 
-      let rewardsEpochs = [0, 0, 100, 100]; //1 epoch for each item in the array
-      let delegatorStakes = [30, 90, 0, 0]; //rewards are calculated using n-2 stakes
-      let otherStakes = [70, 10, 0, 0];
+      let rewardsEpochs = [10000, 100000, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [6, 90, 50, 10000, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [14, 10, 50, 10000, 0];
 
-      let correctRewardForDelegator = 120; //30 on epoch 3, 90 on on epoch 4
+      let correctRewardForDelegator = 30+90+50; //30 on epoch 3, 90 on on epoch 4, 50 on epoch 5
 
       await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
 
