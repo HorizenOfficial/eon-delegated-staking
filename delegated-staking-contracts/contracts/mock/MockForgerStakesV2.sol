@@ -9,6 +9,8 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     mapping(uint32 => uint256) rewardsForEpoch;
     mapping(address => mapping(uint32 => uint256)) stakeForAddressAndEpoch;
     mapping(uint32 => uint256) totalStakeForEpoch;
+    mapping(address => bool) addressAlreadyStaked;
+    mapping(address => uint32) startEpochForAddress;
 
 
     //Methods not useful for this test
@@ -46,6 +48,10 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
         rewardsForEpoch[epoch] = reward;
     }
     function mockStakeForEpoch(uint32 epoch, address delegator, uint256 value) external {
+        if(!addressAlreadyStaked[delegator]) {
+            addressAlreadyStaked[delegator] = true;
+            startEpochForAddress[delegator] = epoch;
+        }
         stakeForAddressAndEpoch[delegator][epoch] = value;
         totalStakeForEpoch[epoch] += value;
     }
@@ -77,6 +83,11 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
 
     function getCurrentConsensusEpoch() external view returns (uint32 epoch) {
         epoch = currentEpoch;
+    }
+
+    function stakeStart(bytes32, bytes32, bytes1, address delegator) external view returns (int32 consensusEpochStart){
+        if(!addressAlreadyStaked[delegator]) return -1;
+        return int32(startEpochForAddress[delegator]);
     }
 
 }

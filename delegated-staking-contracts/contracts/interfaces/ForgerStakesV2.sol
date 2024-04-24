@@ -120,4 +120,11 @@ interface ForgerStakesV2 {
     function getCurrentConsensusEpoch() external view returns (uint32 epoch);
 
     function activate() external;
+
+    /*
+   Returns the  first consensus epoch when a stake is present for a specific delegator.
+   signPubKey, vrf1, vrf2 and delegator parameters are mandatory.
+   If no stake has been found (the delegator never staked anything to this forger) the method returns -1
+*/
+function stakeStart(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, address delegator) external view returns (int32 consensusEpochStart);
 }

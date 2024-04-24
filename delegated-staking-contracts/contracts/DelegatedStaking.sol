@@ -9,7 +9,6 @@ contract DelegatedStaking {
     bytes32 public forgerVrf1;
     bytes1 public forgerVrf2;
     ForgerStakesV2 public forger;
-    uint32 epochAtDeploy;
 
     mapping(address => uint32) public lastClaimedEpochForAddress;
     uint32 public constant  MAX_NUMBER_OF_EPOCH = 100;
@@ -33,8 +32,6 @@ contract DelegatedStaking {
         forger = _forger;
         forgerVrf1 = vrf1;
         forgerVrf2 = vrf2;
-
-        epochAtDeploy = forger.getCurrentConsensusEpoch();
     }
 
     //fallbacks so it can receive ethers
@@ -86,7 +83,12 @@ contract DelegatedStaking {
         uint32 lastClaimedEpoch = lastClaimedEpochForAddress[owner];
         uint32 startEpoch;
         if(lastClaimedEpoch == 0) {
-            startEpoch = epochAtDeploy; //start from the epoch when this contract has deployed
+            int32 stakeStartForUser = forger.stakeStart(signPublicKey, forgerVrf1, forgerVrf2, owner); 
+            //start from the first epoch user has staked
+            if(stakeStartForUser != -1) {
+                startEpoch = uint32(stakeStartForUser);
+            }
+
         } 
         else { 
             startEpoch = lastClaimedEpoch + 1; //start from the next to claim
