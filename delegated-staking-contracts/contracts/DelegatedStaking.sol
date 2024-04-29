@@ -51,7 +51,7 @@ contract DelegatedStaking {
             //we are at an epoch that is lower than 2 (2 is minimum for startEpoch)
             return;
         }
-        
+
         //get sum fees
         uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
         uint32 length = uint32(sumFeeAccruedInEpoch.length);
@@ -63,6 +63,8 @@ contract DelegatedStaking {
 
         uint32 i; //loop
         uint32 epoch = startEpoch;
+        uint256 totalClaimedReward;
+
         while(i != length) {
             uint256 claimedReward;
 
@@ -73,12 +75,15 @@ contract DelegatedStaking {
                 claimedReward = sumFeeAccruedInEpoch[i] * delegatorStakes[i] / totalStakes[i];
             }
 
-            if(claimedReward > 0) {
-                owner.transfer(claimedReward);
-            }
+            totalClaimedReward += claimedReward;
 
             epochNumbersAndClaimedRewards[i] = ClaimData(epoch, claimedReward);
             unchecked { ++i; ++epoch; }
+        }
+
+        //transfer reward
+        if(totalClaimedReward > 0) {
+            owner.transfer(totalClaimedReward);
         }
 
         lastClaimedEpochForAddress[owner] = epoch - 1;
