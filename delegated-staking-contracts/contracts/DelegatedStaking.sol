@@ -51,8 +51,7 @@ contract DelegatedStaking {
             //we are at an epoch that is lower than 2 (2 is minimum for startEpoch)
             return;
         }
-        //uint32 lastEpoch = forger.getCurrentConsensusEpoch(); //TODO is this useful since we use max number of epoch?
-
+        
         //get sum fees
         uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
         uint32 length = uint32(sumFeeAccruedInEpoch.length);

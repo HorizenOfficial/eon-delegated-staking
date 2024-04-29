@@ -1,5 +1,10 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const account = [process.env.PRIVATE_KEY!]
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -11,6 +16,10 @@ const config: HardhatUserConfig = {
       mining: {
         auto: true
       }
+    },
+    gobi: {
+      url: "https://rpc.ankr.com/horizen_gobi_testnet",
+      accounts: account
     }
   }
 };

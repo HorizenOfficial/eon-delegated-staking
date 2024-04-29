@@ -5,11 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "deploy:factory:gobi": "npx hardhat run ./scripts/deployFactory.ts --network gobi",
+    "deploy:reference:gobi": "npx hardhat run ./scripts/deployInstanceFromFactory.ts --network gobi"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "hardhat": "^2.22.2"
   },
   "devDependencies": {
