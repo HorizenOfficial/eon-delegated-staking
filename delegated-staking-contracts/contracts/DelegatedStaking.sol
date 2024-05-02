@@ -98,7 +98,7 @@ contract DelegatedStaking {
             int32 stakeStartForUser = forger.stakeStart(signPublicKey, forgerVrf1, forgerVrf2, owner); 
             //start from the first epoch user has staked
             if(stakeStartForUser != -1) {
-                startEpoch = uint32(stakeStartForUser);
+                startEpoch = uint32(stakeStartForUser + 2);
             }
 
         } 
