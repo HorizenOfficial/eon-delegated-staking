@@ -34,15 +34,6 @@ contract DelegatedStaking {
         forgerVrf2 = vrf2;
     }
 
-    //fallbacks so it can receive ethers
-    fallback() external payable {
-        emit ReceivedFunds(msg.sender, msg.value);
-    }
-
-    receive() external payable {
-        emit ReceivedFunds(msg.sender, msg.value);
-    }
-
     function claimReward(address payable owner) external {
         uint32 startEpoch = _getStartEpochForAddress(owner);
         if(startEpoch >= forger.getCurrentConsensusEpoch()) {
