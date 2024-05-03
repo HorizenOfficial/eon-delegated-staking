@@ -60,7 +60,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     function stakeTotal(bytes32, bytes32, bytes1, address delegator, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfStakes) {
         
         mapping(uint32 => uint256) storage source = delegator == address(0) ? totalStakeForEpoch : stakeForAddressAndEpoch[delegator];
-        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart + 1;
+        uint32 length = _min(maxNumOfEpoch, currentEpoch - consensusEpochStart + 1);
         listOfStakes = new uint256[](length);
         
         uint32 i;
@@ -71,7 +71,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
     }
 
     function rewardsReceived(bytes32, bytes32, bytes1, uint32 consensusEpochStart, uint32 maxNumOfEpoch) external view returns (uint256[] memory listOfRewards) {
-        uint32 length = currentEpoch > (consensusEpochStart + maxNumOfEpoch)? maxNumOfEpoch : currentEpoch - consensusEpochStart + 1;
+        uint32 length = _min(maxNumOfEpoch, currentEpoch - consensusEpochStart + 1);
         listOfRewards = new uint256[](length);
 
         uint32 i;
@@ -90,4 +90,7 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
         return int32(startEpochForAddress[delegator]);
     }
 
+    function _min(uint32 a, uint32 b) internal pure returns(uint32) {
+        return a < b? a : b;
+    }
 }

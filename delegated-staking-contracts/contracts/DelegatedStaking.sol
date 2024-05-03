@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./interfaces/ForgerStakesV2.sol";
+import "hardhat/console.sol";
 
 contract DelegatedStaking {
 
@@ -22,9 +23,7 @@ contract DelegatedStaking {
     event ReceivedFunds(address indexed sender, uint256 amount);
     //error
     error TooManyEpochs(uint256 lastClaimedEpoch, uint256 currentEpoch);
-    error EpochAlreadyClaimed();
-    error EpochStillNotReached();
-    error PublicKeyNotCorrectForOwner(); 
+    error NothingToClaim();
 
     //constructor
     constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2, ForgerStakesV2 _forger) {
@@ -40,7 +39,7 @@ contract DelegatedStaking {
             //nothing to claim 
             //we are et epoch N, delegator already claimed until N-1 OR
             //we are at an epoch that is lower than 2 (2 is minimum for startEpoch)
-            return;
+            revert NothingToClaim();
         }
 
         //get sum fees
@@ -49,7 +48,7 @@ contract DelegatedStaking {
     
         uint256[] memory delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
         uint256[] memory totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
-
+        
         ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length);
 
         uint32 i; //loop
@@ -88,10 +87,8 @@ contract DelegatedStaking {
         if(lastClaimedEpoch == 0) {
             int32 stakeStartForUser = forger.stakeStart(signPublicKey, forgerVrf1, forgerVrf2, owner); 
             //start from the first epoch user has staked
-            if(stakeStartForUser != -1) {
-                startEpoch = uint32(stakeStartForUser + 2);
-            }
-
+            if(stakeStartForUser == -1) revert NothingToClaim();
+            startEpoch = uint32(stakeStartForUser + 2);
         } 
         else { 
             startEpoch = lastClaimedEpoch + 1; //start from the next to claim
