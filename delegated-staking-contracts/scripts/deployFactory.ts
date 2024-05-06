@@ -6,7 +6,7 @@ dotenv.config();
 async function main() {
   //deploy
   const factory = await ethers.getContractFactory("DelegatedStakingFactory");
-  const contract = await factory.deploy(process.env.FORGER_ADDRESS || '');
+  const contract = await factory.deploy();
 
   await contract.waitForDeployment();
   console.log(`Factory contract deployed at address: ${await contract.getAddress()}`);

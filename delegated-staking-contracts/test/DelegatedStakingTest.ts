@@ -19,8 +19,8 @@ describe("DelegatedStaking", function () {
       delegator = accounts[0];
       other = accounts[1];
       let MockForgerStakesV2 = await hre.ethers.getContractFactory("MockForgerStakesV2");
-      let DelegatedStaking = await hre.ethers.getContractFactory("PayableDelegatedStaking"); //using payable so we can send ETH
-  
+      let DelegatedStaking = await hre.ethers.getContractFactory("TestDelegatedStaking"); //using payable so we can send ETH
+      
       mockedForger = await MockForgerStakesV2.deploy();
       await mockedForger.waitForDeployment();
       delegatedStaking = await DelegatedStaking.deploy(ZERO_32, ZERO_32, "0x00", await mockedForger.getAddress()) as DelegatedStaking;

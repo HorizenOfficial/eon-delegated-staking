@@ -9,7 +9,7 @@ contract DelegatedStaking {
     bytes32 public signPublicKey;
     bytes32 public forgerVrf1;
     bytes1 public forgerVrf2;
-    ForgerStakesV2 public forger;
+    ForgerStakesV2 public forger = ForgerStakesV2(0x0000000000000000000022222222222222222333);
 
     mapping(address => uint32) public lastClaimedEpochForAddress;
     uint32 public constant MAX_NUMBER_OF_EPOCH = 100;
@@ -27,9 +27,8 @@ contract DelegatedStaking {
     error ArraysHaveDifferentLengths();
 
     //constructor
-    constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2, ForgerStakesV2 _forger) {
+    constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2) {
         signPublicKey = _signPublicKey;
-        forger = _forger;
         forgerVrf1 = vrf1;
         forgerVrf2 = vrf2;
     }
