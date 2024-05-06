@@ -24,6 +24,7 @@ contract DelegatedStaking {
     //error
     error TooManyEpochs(uint256 lastClaimedEpoch, uint256 currentEpoch);
     error NothingToClaim();
+    error ArraysHaveDifferentLengths();
 
     //constructor
     constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2, ForgerStakesV2 _forger) {
@@ -46,10 +47,13 @@ contract DelegatedStaking {
         uint256[] memory sumFeeAccruedInEpoch = forger.rewardsReceived(signPublicKey, forgerVrf1, forgerVrf2, startEpoch, MAX_NUMBER_OF_EPOCH);
         uint32 length = uint32(sumFeeAccruedInEpoch.length);
     
-        uint256[] memory delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
-        uint256[] memory totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, MAX_NUMBER_OF_EPOCH); 
+        uint256[] memory delegatorStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, owner, startEpoch - 2, length); 
+        uint256[] memory totalStakes = forger.stakeTotal(signPublicKey, forgerVrf1, forgerVrf2, address(0), startEpoch - 2, length); 
+
+        //check lengths
+        if(length != delegatorStakes.length || length != totalStakes.length) revert ArraysHaveDifferentLengths();
         
-        ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length);
+        ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length); 
 
         uint32 i; //loop
         uint32 epoch = startEpoch;
