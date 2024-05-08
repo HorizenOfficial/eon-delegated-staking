@@ -14,7 +14,7 @@ describe("DelegatedStaking", function () {
 
   describe("DelegatedStaking Test", function () {
 
-    before(async () => {
+    beforeEach(async () => {
       accounts = await hre.ethers.getSigners();
       delegator = accounts[0];
       other = accounts[1];
@@ -48,9 +48,9 @@ describe("DelegatedStaking", function () {
     it("Test simple delegate claim", async function () {
       // GAS PRICE SHOULD BE ZERO IN HARDHAT CONFIG
 
-      let rewardsEpochs = [10000, 100000, 100, 100, 100]; //1 epoch for each item in the array
-      let delegatorStakes = [6, 90, 50, 10000, 0]; //rewards are calculated using n-2 stakes
-      let otherStakes = [14, 10, 50, 10000, 0];
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
 
       let correctRewardForDelegator = 30+90+50; //30 on epoch 3, 90 on on epoch 4, 50 on epoch 5
 
@@ -72,6 +72,75 @@ describe("DelegatedStaking", function () {
       expect(postClaimBalance).to.equal(preClaimBalance + BigInt(correctRewardForDelegator));
       expect(postClaimContractBalance).to.equal(preClaimContractBalance - BigInt(correctRewardForDelegator));
 
+    });
+  
+    it("Test revert if nothing to claim (already claimed at current epoch)", async function () {
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+
+      let tx = await delegatedStaking.claimReward(await delegator.getAddress());
+      await tx.wait();
+      //try to claim again
+      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
+
+    });
+
+      
+    it("Test revert if nothing to claim (nothing staked)", async function () {
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [0, 0, 0, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+
+      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
+
+    });
+
+    it("Test revert if nothing to claim (staked only in last 2 epochs)", async function () {
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [0, 0, 0, 50, 50]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+
+      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
+    });
+
+    it("Test revert if nothing to claim (after first claim, stake is zero for successive claims)", async function () {
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+
+      let tx = await delegatedStaking.claimReward(await delegator.getAddress());
+      await tx.wait();
+
+      //go on in epochs
+      rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      delegatorStakes = [0, 0, 0, 0, 0]; //rewards are calculated using n-2 stakes
+      otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(5, rewardsEpochs, delegatorStakes, otherStakes);
+
+      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
+    });
+
+    it("Test positive multiple claims", async function () {
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+
+      let tx = await delegatedStaking.claimReward(await delegator.getAddress());
+      await tx.wait();
+
+      //go on in epochs
+      rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      otherStakes = [70, 10, 50, 0, 0];
+      await mockEpoch(5, rewardsEpochs, delegatorStakes, otherStakes);
+
+      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
     });
   });
 });
