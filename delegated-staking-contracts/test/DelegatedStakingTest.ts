@@ -126,21 +126,35 @@ describe("DelegatedStaking", function () {
     });
 
     it("Test positive multiple claims", async function () {
-      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
-      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
-      let otherStakes = [70, 10, 50, 0, 0];
-      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+      let rewardsEpochs1 = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes1 = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes1 = [70, 10, 50, 0, 0];
+      await mockEpoch(0, rewardsEpochs1, delegatorStakes1, otherStakes1);
 
       let tx = await delegatedStaking.claimReward(await delegator.getAddress());
       await tx.wait();
 
       //go on in epochs
-      rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
-      delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
-      otherStakes = [70, 10, 50, 0, 0];
-      await mockEpoch(5, rewardsEpochs, delegatorStakes, otherStakes);
+      let rewardsEpochs2 = [100, 100, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes2 = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes2 = [70, 10, 50, 0, 0];
+      await mockEpoch(rewardsEpochs1.length, rewardsEpochs2, delegatorStakes2, otherStakes2);
 
-      expect(delegatedStaking.claimReward(await delegator.getAddress())).to.be.revertedWithCustomError(delegatedStaking, "NothingToClaim")
+      let correctRewardForDelegator = 30+90+50; //0 on epoch 4, 0 on epoch 5, 30 on epoch 6, 90 on on epoch 7, 50 on epoch 8
+      //get current delegator balance
+      let preSecondClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
+      let preSecondClaimContractBalance = await hre.ethers.provider.getBalance(await delegatedStaking.getAddress());
+
+      await delegatedStaking.claimReward(await delegator.getAddress())
+      let lastClaimedEpoch = await delegatedStaking.lastClaimedEpochForAddress(await delegator.getAddress());
+
+      //get balance after claim
+      let postSecondClaimBalance = await hre.ethers.provider.getBalance(await delegator.getAddress());
+      let postSecondClaimContractBalance = await hre.ethers.provider.getBalance(await delegatedStaking.getAddress());
+
+      expect(lastClaimedEpoch).to.equal(rewardsEpochs1.length + rewardsEpochs2.length);
+      expect(postSecondClaimBalance).to.equal(preSecondClaimBalance + BigInt(correctRewardForDelegator));
+      expect(postSecondClaimContractBalance).to.equal(preSecondClaimContractBalance - BigInt(correctRewardForDelegator));
     });
   });
 });
