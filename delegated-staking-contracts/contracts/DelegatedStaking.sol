@@ -19,7 +19,7 @@ contract DelegatedStaking {
         uint256 claimedReward;
     }
     //events
-    event Claim(address indexed signer, bytes32 indexed forgerVrf1, bytes1 indexed forgerVrf2, ClaimData[] claimData);
+    event Claim(bytes32 signPublicKey, bytes32 indexed forgerVrf1, bytes1 indexed forgerVrf2, address indexed delegator, ClaimData[] claimData);
     event ReceivedFunds(address indexed sender, uint256 amount);
     //error
     error TooManyEpochs(uint256 lastClaimedEpoch, uint256 currentEpoch);
@@ -80,7 +80,7 @@ contract DelegatedStaking {
         }
 
         lastClaimedEpochForAddress[owner] = epoch - 1;
-        emit Claim(owner, forgerVrf1, forgerVrf2, epochNumbersAndClaimedRewards);
+        emit Claim(signPublicKey, forgerVrf1, forgerVrf2, owner, epochNumbersAndClaimedRewards);
 
     }
 

@@ -17,6 +17,10 @@ const config: HardhatUserConfig = {
         auto: true
       }
     },
+    pregobi: {
+      url: "http://evm-tn-pre-gobi-test-1.de.horizenlabs.io/ethv1",
+      accounts: account
+    },
     gobi: {
       url: "https://rpc.ankr.com/horizen_gobi_testnet",
       accounts: account

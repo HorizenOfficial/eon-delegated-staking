@@ -15,8 +15,12 @@ contract MockForgerStakesV2 is ForgerStakesV2 {
 
     //Methods not useful for this test
    
-    function registerForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint32 rewardShare, address reward_address) external payable {}
-    function updateForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint32 rewardShare, address reward_address, bytes32 signature1, bytes32 signature2) external {}
+    function registerForger(bytes32 signPubKey, bytes32 vrfKey1, bytes1 vrfKey2, uint32 rewardShare,
+        address rewardAddress, bytes32 sign1_1, bytes32 sign1_2,
+        bytes32 sign2_1, bytes32 sign2_2, bytes32 sign2_3, bytes1 sign2_4) external payable {}
+    function updateForger(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint32 rewardShare,
+        address rewardAddress, bytes32 sign1_1, bytes32 sign1_2,
+        bytes32 sign2_1, bytes32 sign2_2, bytes32 sign2_3, bytes1 sign2_4) external {}
     function delegate(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2) external payable {}
     function withdraw(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint256 amount) external {}
     function getForger(bytes32, bytes32, bytes1) external pure returns (ForgerInfo memory forgerInfo) {
