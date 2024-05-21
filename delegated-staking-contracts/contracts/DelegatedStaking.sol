@@ -20,7 +20,6 @@ contract DelegatedStaking {
     }
     //events
     event Claim(bytes32 signPublicKey, bytes32 indexed forgerVrf1, bytes1 indexed forgerVrf2, address indexed delegator, ClaimData[] claimData);
-    event ReceivedFunds(address indexed sender, uint256 amount);
     //error
     error TooManyEpochs(uint256 lastClaimedEpoch, uint256 currentEpoch);
     error NothingToClaim();
