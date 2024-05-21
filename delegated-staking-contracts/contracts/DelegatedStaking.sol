@@ -33,12 +33,30 @@ contract DelegatedStaking {
     }
 
     function claimReward(address payable owner) external {
-        uint32 startEpoch = _getStartEpochForAddress(owner);
+        (uint256 totalToClaim, ClaimData[] memory claimDetails) = calcReward(owner);
+        if(totalToClaim == 0) {
+            revert NothingToClaim();
+        }
+        //transfer reward
+        owner.transfer(totalToClaim);
+        //update last claimed epoch
+        lastClaimedEpochForAddress[owner] = claimDetails[claimDetails.length - 1].epochNumber;
+        emit Claim(signPublicKey, forgerVrf1, forgerVrf2, owner, claimDetails);
+
+    }
+
+    function calcReward(address owner) public view returns(uint256 totalToClaim, ClaimData[] memory claimDetails) {
+        int32 startEpochSigned = _getStartEpochForAddress(owner);
+        if(startEpochSigned == -1 ) {
+            return (0, new ClaimData[](0));
+        }
+
+        uint32 startEpoch = uint32(startEpochSigned);
         if(startEpoch >= forger.getCurrentConsensusEpoch()) {
             //nothing to claim 
             //we are et epoch N, delegator already claimed until N-1 OR
             //we are at an epoch that is lower than 2 (2 is minimum for startEpoch)
-            revert NothingToClaim();
+            return (0, new ClaimData[](0));
         }
 
         //get sum fees
@@ -51,11 +69,10 @@ contract DelegatedStaking {
         //check lengths
         if(length != delegatorStakes.length || length != totalStakes.length) revert ArraysHaveDifferentLengths();
         
-        ClaimData[] memory epochNumbersAndClaimedRewards = new ClaimData[](length); 
+        claimDetails = new ClaimData[](length); 
 
         uint32 i; //loop
         uint32 epoch = startEpoch;
-        uint256 totalClaimedReward;
 
         while(i != length) {
             uint256 claimedReward;
@@ -67,35 +84,28 @@ contract DelegatedStaking {
                 claimedReward = sumFeeAccruedInEpoch[i] * delegatorStakes[i] / totalStakes[i];
             }
 
-            totalClaimedReward += claimedReward;
+            totalToClaim += claimedReward;
 
-            epochNumbersAndClaimedRewards[i] = ClaimData(epoch, claimedReward);
+            claimDetails[i] = ClaimData(epoch, claimedReward);
             unchecked { ++i; ++epoch; }
         }
 
-        //transfer reward
-        if(totalClaimedReward > 0) {
-            owner.transfer(totalClaimedReward);
-        }
-
-        lastClaimedEpochForAddress[owner] = epoch - 1;
-        emit Claim(signPublicKey, forgerVrf1, forgerVrf2, owner, epochNumbersAndClaimedRewards);
-
+        return (totalToClaim, claimDetails);
     }
 
-    function _getStartEpochForAddress(address owner) internal view returns(uint32) {
+    function _getStartEpochForAddress(address owner) internal view returns(int32) {
         uint32 lastClaimedEpoch = lastClaimedEpochForAddress[owner];
-        uint32 startEpoch;
+        int32 startEpoch;
         if(lastClaimedEpoch == 0) {
             int32 stakeStartForUser = forger.stakeStart(signPublicKey, forgerVrf1, forgerVrf2, owner); 
             //start from the first epoch user has staked
-            if(stakeStartForUser == -1) revert NothingToClaim();
-            startEpoch = uint32(stakeStartForUser + 2);
+            if(stakeStartForUser == -1) return -1;
+            startEpoch = stakeStartForUser + 2;
         } 
         else { 
-            startEpoch = lastClaimedEpoch + 1; //start from the next to claim
+            startEpoch = int32(lastClaimedEpoch) + 1; //start from the next to claim
         }
 
-        return startEpoch < 2 ? 2 : startEpoch; //nothing to claim in first two epochs due to n-2
+        return startEpoch < 2 ? int32(2) : startEpoch; //nothing to claim in first two epochs due to n-2
     }
 }
