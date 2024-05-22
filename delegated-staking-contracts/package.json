@@ -1,0 +1,23 @@
+{
+  "name": "eon-delegated-staking-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:factory:gobi": "npx hardhat run ./scripts/deployFactory.ts --network gobi",
+    "deploy:reference:gobi": "npx hardhat run ./scripts/deployInstanceFromFactory.ts --network gobi",
+    "deploy:factory:pregobi": "npx hardhat run ./scripts/deployFactory.ts --network pregobi",
+    "deploy:reference:pregobi": "npx hardhat run ./scripts/deployInstanceFromFactory.ts --network pregobi"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}
