@@ -9,7 +9,7 @@ Intended to be used by delegators to claim their staking rewards. Leverages the 
 | Method | Description |
 | ------------- | ------------- |
 | `calcReward(address owner)`  | Calculates the reward amount `owner` is eligible to receive |
-| `claimReward(address payable owner)`  | Calculates the reward amount `owner` is eligible to recieve, and then sends those funds to `owner` |
+| `claimReward(address payable owner)`  | Calculates the reward amount `owner` is eligible to receive, and then sends those funds to `owner` |
 
 #### Reward calculation
 For a given epoch (N), a delegator's rewards is based on the total amount they have staked 2 epochs ago (N-2). The reward calculation takes this number, proportionate to the total amount staked for the same epoch (N-2). For example:
@@ -20,7 +20,7 @@ A delegator can claim for multiple epochs at a time. The smart contract will com
 
 ### `DelegatedStakingFactory`
 
-Used by a forger to deploy an instance of the `DelegatedStaking` contract, which delegators who have staked to this forger can use to claim their staking rewards. Only one `DelegatedStaking` contract can be deployed per forger. Forger's are uniquely identified by their signed public key and VRF. Once deployed, a forger can use the `ForgerStakesV2` native smart contract to call either `registerForger` for new forgers, or `updateForger` for existing forgers.
+Used by a forger to deploy an instance of the `DelegatedStaking` contract, which delegators who have staked to this forger can use to claim their staking rewards. Only one `DelegatedStaking` contract can be deployed per forger. Forger's are uniquely identified by their signer public key and VRF. Once deployed, a forger can use the `ForgerStakesV2` native smart contract to call either `registerForger` for new forgers, or `updateForger` for existing forgers.
 
 | Method | Description |
 | ------------- | ------------- |
