@@ -24,6 +24,10 @@ const config: HardhatUserConfig = {
     gobi: {
       url: "https://rpc.ankr.com/horizen_gobi_testnet",
       accounts: account
+    },
+    eon: {
+      url: "https://eon-rpc.horizenlabs.io/ethv1",
+      accounts: account
     }
   }
 };
