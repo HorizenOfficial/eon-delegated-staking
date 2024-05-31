@@ -3,8 +3,9 @@ pragma solidity ^0.8.10;
 
 import "./interfaces/ForgerStakesV2.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract DelegatedStaking {
+contract DelegatedStaking is ReentrancyGuard {
 
     bytes32 public signPublicKey;
     bytes32 public forgerVrf1;
@@ -32,17 +33,18 @@ contract DelegatedStaking {
         forgerVrf2 = vrf2;
     }
 
-    function claimReward(address payable owner) external {
+    function claimReward(address payable owner) nonReentrant external {
         (uint256 totalToClaim, ClaimData[] memory claimDetails) = calcReward(owner);
         if(totalToClaim == 0) {
             revert NothingToClaim();
         }
-        //transfer reward
-        owner.transfer(totalToClaim);
+
         //update last claimed epoch
         lastClaimedEpochForAddress[owner] = claimDetails[claimDetails.length - 1].epochNumber;
+        
+        //transfer reward
+        owner.transfer(totalToClaim);
         emit Claim(signPublicKey, forgerVrf1, forgerVrf2, owner, claimDetails);
-
     }
 
     function calcReward(address owner) public view returns(uint256 totalToClaim, ClaimData[] memory claimDetails) {
