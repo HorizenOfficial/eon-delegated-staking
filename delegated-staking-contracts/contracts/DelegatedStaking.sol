@@ -9,7 +9,8 @@ contract DelegatedStaking is ReentrancyGuard {
     bytes32 public immutable signPublicKey;
     bytes32 public immutable forgerVrf1;
     bytes1 public immutable forgerVrf2;
-    ForgerStakesV2 public immutable forger = ForgerStakesV2(0x0000000000000000000022222222222222222333);
+    ForgerStakesV2 public forger = ForgerStakesV2(0x0000000000000000000022222222222222222333);
+    uint256 fallbackAllowedGas;
 
     mapping(address => uint32) public lastClaimedEpochForAddress;
     uint32 public constant MAX_NUMBER_OF_EPOCH = 100;
@@ -27,10 +28,11 @@ contract DelegatedStaking is ReentrancyGuard {
     error EtherNotSent();
 
     //constructor
-    constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2) {
+    constructor(bytes32 _signPublicKey, bytes32 vrf1, bytes1 vrf2, uint256 _fallbackAllowedGas) {
         signPublicKey = _signPublicKey;
         forgerVrf1 = vrf1;
         forgerVrf2 = vrf2;
+        fallbackAllowedGas = _fallbackAllowedGas;
     }
 
     function claimReward(address payable owner) nonReentrant external {
@@ -43,7 +45,7 @@ contract DelegatedStaking is ReentrancyGuard {
         lastClaimedEpochForAddress[owner] = claimDetails[claimDetails.length - 1].epochNumber;
         
         //transfer reward
-        (bool sent, /*bytes memory data*/) = owner.call{gas: 2300, value:totalToClaim}("");
+        (bool sent, /*bytes memory data*/) = owner.call{gas: fallbackAllowedGas, value:totalToClaim}("");
         if(!sent) revert EtherNotSent();
 
         emit Claim(signPublicKey, forgerVrf1, forgerVrf2, owner, claimDetails);

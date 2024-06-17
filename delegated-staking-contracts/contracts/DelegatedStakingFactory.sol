@@ -19,11 +19,11 @@ contract DelegatedStakingFactory {
     //errors
     error AlreadyDeployedWithTheSameKeys();
 
-    function deployDelegatedStakingReferenceImplementation(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2) public returns(DelegatedStaking) {
+    function deployDelegatedStakingReferenceImplementation(bytes32 signPubKey, bytes32 vrf1, bytes1 vrf2, uint256 fallbackAllowedGas) public returns(DelegatedStaking) {
         if(deployedContractsFromParams[signPubKey][vrf1][vrf2] != address(0)) {
             revert AlreadyDeployedWithTheSameKeys();
         }
-        DelegatedStaking newInstance = new DelegatedStaking(signPubKey, vrf1, vrf2);
+        DelegatedStaking newInstance = new DelegatedStaking(signPubKey, vrf1, vrf2, fallbackAllowedGas);
 
         deployedContractsFromParams[signPubKey][vrf1][vrf2] = address(newInstance);
         forgerKeyFromContractAddress[address(newInstance)] = ForgerKey(signPubKey, vrf1, vrf2);
