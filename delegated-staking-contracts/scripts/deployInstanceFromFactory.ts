@@ -9,8 +9,7 @@ async function main() {
   const tx = await factory.deployDelegatedStakingReferenceImplementation(
     process.env.SIGN_PUBLIC_KEY || '',
     process.env.VRF1 || '',
-    process.env.VRF2 || '',
-    process.env.FALLBACK_ALLOWED_GAS || 2300
+    process.env.VRF2 || ''
   )
 
   let receipt = await tx.wait();

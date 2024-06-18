@@ -9,7 +9,6 @@ describe("DelegatedStakingFactory", function () {
   const SIGN_KEY = "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
   const VRF1 = "0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
   const VRF2 = "0x0f";
-  const FALLBACK_ALLOWED_GAS = 2300;
 
   let accounts: SignerWithAddress[];
   let delegatedStakingFactory: DelegatedStakingFactory;
@@ -35,7 +34,7 @@ describe("DelegatedStakingFactory", function () {
     }
 
     it("Test deploy and event correctly triggered", async function () {
-      let tx = await delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2, FALLBACK_ALLOWED_GAS);
+      let tx = await delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2);
       let receipt: ContractTransactionReceipt = await tx.wait() as ContractTransactionReceipt;
       let deployedAddress = getAddressFromReceipt(receipt);
 
@@ -53,10 +52,10 @@ describe("DelegatedStakingFactory", function () {
     });
 
     it("Test duplicate deploy failing", async function () {
-      let tx = await delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2, FALLBACK_ALLOWED_GAS);
+      let tx = await delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2);
       await tx.wait();
 
-      await expect(delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2, FALLBACK_ALLOWED_GAS)).to.be.revertedWithCustomError(delegatedStakingFactory, "AlreadyDeployedWithTheSameKeys");
+      await expect(delegatedStakingFactory.deployDelegatedStakingReferenceImplementation(SIGN_KEY, VRF1, VRF2)).to.be.revertedWithCustomError(delegatedStakingFactory, "AlreadyDeployedWithTheSameKeys");
     });
   });
 });
