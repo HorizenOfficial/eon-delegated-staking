@@ -7,7 +7,7 @@ describe("DelegatedStaking", function () {
   
   const ZERO_32 = hre.ethers.ZeroHash;
   let accounts: SignerWithAddress[];
-  let delegator: SignerWithAddress;
+  let delegator: SignerWithAddress | hre.ethers.VoidSigner;
   let other: SignerWithAddress;
   let mockedForger: MockForgerStakesV2;
   let delegatedStaking: DelegatedStaking;
@@ -155,6 +155,23 @@ describe("DelegatedStaking", function () {
       expect(lastClaimedEpoch).to.equal(rewardsEpochs1.length + rewardsEpochs2.length);
       expect(postSecondClaimBalance).to.equal(preSecondClaimBalance + BigInt(correctRewardForDelegator));
       expect(postSecondClaimContractBalance).to.equal(preSecondClaimContractBalance - BigInt(correctRewardForDelegator));
+    });
+
+    it("Test claim on a contract that uses gas", async function () {
+      let TestContractWithFallback = await hre.ethers.getContractFactory("TestContractWithFallback");
+      
+      let contract = await TestContractWithFallback.deploy();
+      await contract.waitForDeployment();
+      delegator = new hre.ethers.VoidSigner(await contract.getAddress());
+  
+      let rewardsEpochs = [0, 0, 100, 100, 100]; //1 epoch for each item in the array
+      let delegatorStakes = [30, 90, 50, 0, 0]; //rewards are calculated using n-2 stakes
+      let otherStakes = [70, 10, 50, 0, 0];
+  
+      await mockEpoch(0, rewardsEpochs, delegatorStakes, otherStakes);
+      
+      await delegatedStaking.claimReward(await delegator.getAddress());
+  
     });
   });
 });
